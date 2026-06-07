@@ -1,1 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>D4R|NDA R9J BOT</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    body {
+      font-family: Arial, sans-serif;
+      background: url('https://i.postimg.cc/Xvf1RZWS/bb1dfb2eadbc22f0abeccef5594227de.jpg') no-repeat center center fixed;
+      background-size: cover;
+      padding: 20px;
+      color: white;
+      min-height: 100vh;
+    }
+
+    /* ── Animated rainbow header ── */
+    .header-box {
+      text-align: center;
+      padding: 18px 10px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      font-size: 26px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
+      animation: colorChange 5s infinite;
+      border: 2px solid white;
+    }
+    @keyframes colorChange {
+      0%   { background-color: #ff0000; color: #fff; }
+      20%  { background-color: #ff6600; color: #fff; }
+      40%  { background-color: #cc00ff; color: #fff; }
+      60%  { background-color: #0044ff; color: #fff; }
+      80%  { background-color: #ff00aa; color: #fff; }
+      100% { background-color: #ff0000; color: #fff; }
+    }
+
+    /* ── Main container ── */
+    .container {
+      background: rgba(0,0,0,0.78);
+      padding: 22px;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    h3 {
+      color: #fff;
+      text-shadow: 0 0 10px #ff4444;
+      text-align: center;
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+    }
+
+    /* ── Section boxes ── */
+    .section-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #555;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      font-size: 0.88rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 11px 13px;
+      margin-bottom: 10px;
+      border: 1px solid #555;
+      border-radius: 6px;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #ff4444; }
+    textarea { height: 110px; resize: vertical; }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 7px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: opacity 0.2s, transform 0.1s;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .btn:hover { opacity: 0.88; transform: scale(0.99); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-save {
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+      color: #fff;
+    }
+    .btn-start {
+      background: linear-gradient(45deg, #11998e, #38ef7d);
+      color: #000;
+    }
+
+    /* ── Status message ── */
+    .status-msg {
+      margin-top: 8px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-align: center;
+      display: none;
+    }
+    .status-msg.ok   { background: rgba(0,255,0,0.12); color: #00ff88; border: 1px solid #00ff88; }
+    .status-msg.err  { background: rgba(255,0,0,0.12); color: #ff4444; border: 1px solid #ff4444; }
+    .status-msg.info { background: rgba(255,200,0,0.12); color: #ffcc00; border: 1px solid #ffcc00; }
+
+    /* ── Log box ── */
+    #log-box {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      height: 220px;
+      overflow-y: auto;
+      padding: 10px;
+      font-size: 0.76rem;
+      font-family: 'Courier New', monospace;
+      line-height: 1.7;
+    }
+    .log-ok  { color: #4caf50; }
+    .log-err { color: #ff6666; }
+
+    /* ── Groups ── */
+    #groups-list { list-style: none; font-size: 0.82rem; }
+    #groups-list li {
+      padding: 5px 0;
+      border-bottom: 1px solid #2a2a2a;
+      color: #aaa;
+    }
+    .badge {
+      display: inline-block;
+      background: #ff4444;
+      color: #fff;
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-size: 0.74rem;
+      margin-left: 8px;
+    }
+
+    /* ── Animated footer ── */
+    .footer-box {
+      margin-top: 22px;
+      padding: 14px;
+      text-align: center;
+      border-radius: 10px;
+      border: 2px solid white;
+      font-weight: bold;
+      text-transform: uppercase;
+      animation: footerColor 6s infinite;
+      background: rgba(0,0,0,0.5);
+      font-size: 11px;
+      line-height: 1.7;
+      letter-spacing: 1px;
+    }
+    @keyframes footerColor {
+      0%   { border-color: #ff0000; color: #ff0000; box-shadow: 0 0 12px #ff0000; }
+      25%  { border-color: #00ff88; color: #00ff88; box-shadow: 0 0 12px #00ff88; }
+      50%  { border-color: #0088ff; color: #0088ff; box-shadow: 0 0 12px #0088ff; }
+      75%  { border-color: #ffff00; color: #ffff00; box-shadow: 0 0 12px #ffff00; }
+      100% { border-color: #ff00ff; color: #ff00ff; box-shadow: 0 0 12px #ff00ff; }
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #fff; border-top-color: transparent;
+      border-radius: 50%; animation: spin 0.75s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- ══ Animated Header ══ -->
+  <div class="header-box">😈 D4R|ND4 B0T 😈</div>
+
+  <div class="container">
+
+    <!-- ══ SECTION 1: Save Cookies ══ -->
+    <div class="section-box">
+      <h3>🍪 Cookies JSON Save Karo</h3>
+
+      <label style="color:#ffcc00;">📋 Facebook Cookies (JSON Array Paste Karo):</label>
+      <textarea id="cookies-input" placeholder='[{"key":"c_user","value":"..."},{"key":"xs","value":"..."}]'></textarea>
+
+      <label style="color:#00ffcc;">🆔 Admin Facebook UID:</label>
+      <input type="text" id="admin-uid" placeholder="Apna Facebook numeric ID dalo (e.g. 100012345678)"/>
+
+      <label style="color:#a8ff78;">⚙️ Command Prefix:</label>
+      <input type="text" id="cmd-prefix" value="/" style="width:90px;"/>
+
+      <button class="btn btn-save" id="save-btn" onclick="saveCookies()">
+        💾 Cookies Save Karo &amp; Bot Shuru Karo
+      </button>
+      <div class="status-msg" id="save-status"></div>
+    </div>
+
+    <!-- ══ SECTION 2: Live Logs ══ -->
+    <div class="section-box">
+      <h3>📋 Live Logs</h3>
+      <div id="log-box"></div>
+    </div>
+
+    <!-- ══ SECTION 3: Joined Groups ══ -->
+    <div class="section-box">
+      <h3>👥 Joined Groups <span class="badge" id="grp-count">0</span></h3>
+      <ul id="groups-list"><li style="color:#555;">Abhi koi group nahi mila...</li></ul>
+    </div>
+
+    <!-- ══ Footer ══ -->
+    <div class="footer-box">
+      😈 DARINDA BOT | HATER KI MAA CHODNE WALA 😈<br>
+      🔒 ALL RIGHTS RESERVED © 2025-2026 | DEVIL IS MY BOSS
+    </div>
+
+  </div>
+
+  <script>
+    const socket = io();
+
+    // ── Live Logs ──────────────────────────────────────────────────────────
+    const logBox = document.getElementById('log-box');
+    socket.on('botlog', msg => {
+      const div = document.createElement('div');
+      div.className = msg.includes('ERROR') ? 'log-err' : 'log-ok';
+      div.textContent = msg;
+      logBox.appendChild(div);
+      logBox.scrollTop = logBox.scrollHeight;
+    });
+
+    // ── Groups update ──────────────────────────────────────────────────────
+    const groupsList = document.getElementById('groups-list');
+    const grpCount   = document.getElementById('grp-count');
+    socket.on('groupsUpdate', groups => {
+      grpCount.textContent = groups.length;
+      if (groups.length === 0) {
+        groupsList.innerHTML = '<li style="color:#555;">Koi group nahi mila abhi...</li>';
+        return;
+      }
+      groupsList.innerHTML = groups.map(g => `<li>📌 ${g}</li>`).join('');
+    });
+
+    // ── Save Cookies ───────────────────────────────────────────────────────
+    async function saveCookies() {
+      const cookiesTxt = document.getElementById('cookies-input').value.trim();
+      const adminUID   = document.getElementById('admin-uid').value.trim();
+      const prefix     = document.getElementById('cmd-prefix').value.trim() || '/';
+      const statusEl   = document.getElementById('save-status');
+      const btn        = document.getElementById('save-btn');
+
+      if (!cookiesTxt) return showStatus('❌ Cookies JSON khali hai! Pehle paste karo.', 'err');
+      if (!adminUID)   return showStatus('❌ Admin UID daalna zaroori hai!', 'err');
+
+      let cookies;
+      try {
+        cookies = JSON.parse(cookiesTxt);
+        if (!Array.isArray(cookies) || cookies.length === 0) throw new Error('Array expected');
+      } catch (e) {
+        return showStatus('❌ Cookies ka format galat hai! Sahi JSON array chahiye.', 'err');
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Save ho raha hai...';
+      showStatus('⏳ Bot shuru ho raha hai...', 'info');
+
+      try {
+        const res  = await fetch('/configure', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cookies: cookiesTxt, adminID: adminUID, prefix })
+        });
+        const text = await res.text();
+        if (res.ok) {
+          showStatus('✅ Cookies save ho gayi! Bot shuru ho gaya.', 'ok');
+        } else {
+          showStatus('❌ ' + text, 'err');
+        }
+      } catch (e) {
+        showStatus('❌ Network error: ' + e.message, 'err');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '💾 Cookies Save Karo &amp; Bot Shuru Karo';
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('save-status');
+      el.className = 'status-msg ' + type;
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
